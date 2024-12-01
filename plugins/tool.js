@@ -25,9 +25,9 @@ System({
 	adminAccess: true,
 }, async (message) => {
 	const start = new Date().getTime();
-	const ping = await message.send("*𝆺𝅥 running 𝆺𝅥*");
+	const ping = await message.send("*𝆺𝅥 running ping 𝆺𝅥*");
 	const end = new Date().getTime();
-	return await ping.edit("*☇ ꜱᴩᷨᴇͦᴇͭᴅ ☁ :* " + (end - start) + " *ᴍꜱ* ");
+	return await ping.edit("*⟫ ᒍᗩᖇᐯIS Sᑭᙓᙓᗪ◢📍 :* " + (end - start) + " *𝐦𝐒* ");
 });
 
 System({
