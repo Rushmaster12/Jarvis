@@ -16,7 +16,7 @@ jarvis md is Multi Device whatsapp bot
 
 3. Now Deploy
     <br>
-<a href='https://qr-dnpk.onrender.com/heroku.html' target="_blank"><img alt='Heroku' src='https://img.shields.io/badge/-Deploy-black?style=for-the-badge&logo=heroku&logoColor=white'/></a>
+<a href='https://jarvis-qr.vercel.app/heroku' target="_blank"><img alt='Heroku' src='https://img.shields.io/badge/-Deploy-black?style=for-the-badge&logo=heroku&logoColor=white'/></a>
 
 
 #### DEPLOY TO RAILWAY
@@ -29,7 +29,7 @@ jarvis md is Multi Device whatsapp bot
 
 3. Now Deploy
     <br>
-<a href='https://qr-dnpk.onrender.com/railway.html' target="_blank"><img alt='DEPLOY' src='https://img.shields.io/badge/-DEPLOY-black?style=for-the-badge&logo=railway&logoColor=white'/></a>
+<a href='https://jarvis-qr.vercel.app/railway' target="_blank"><img alt='DEPLOY' src='https://img.shields.io/badge/-DEPLOY-black?style=for-the-badge&logo=railway&logoColor=white'/></a>
 
 #### DEPLOY TO KOYEB 
 
@@ -37,13 +37,13 @@ jarvis md is Multi Device whatsapp bot
     <br>
 <a href='https://app.koyeb.com/auth/signup' target="_blank"><img alt='koyeb' src='https://img.shields.io/badge/-Create-black?style=for-the-badge&logo=koyeb&logoColor=white'/></a>
 
-3. Get [DATABASE_URL](https://github.com/Loki-Xer/jarvis-md/wiki/Data-base-url) and copy it
+3. Get [DATABASE_URL](https://github.com/Loki-Xer/jarvis/wiki/Data-base-url) and copy it
 
 4. Get [Koyeb api key](https://app.koyeb.com/settings/api)
 
 2. Now Deploy
     <br>
-<a href='https://qr-dnpk.onrender.com/koyeb.html' target="_blank"><img alt='DEPLOY' src='https://img.shields.io/badge/-DEPLOY-black?style=for-the-badge&logo=koyeb&logoColor=white'/></a>
+<a href='https://jarvis-qr.vercel.app/koyeb' target="_blank"><img alt='DEPLOY' src='https://img.shields.io/badge/-DEPLOY-black?style=for-the-badge&logo=koyeb&logoColor=white'/></a>
 
 #### DEPLOY TO PANEL
 
@@ -65,7 +65,7 @@ jarvis md is Multi Device whatsapp bot
 
 2. Now Deploy
     <br>
-<a href='https://qr-dnpk.onrender.com/render.html' target="_blank"><img alt='DEPLOY' src='https://img.shields.io/badge/-DEPLOY-black?style=for-the-badge&logo=render&logoColor=white'/></a>
+<a href='https://jarvis-qr.vercel.app/render' target="_blank"><img alt='DEPLOY' src='https://img.shields.io/badge/-DEPLOY-black?style=for-the-badge&logo=render&logoColor=white'/></a>
     
  
 #### DEPLOY TO REPLIT 
@@ -76,7 +76,7 @@ jarvis md is Multi Device whatsapp bot
 
 2. Now Deploy
     <br>
-<a href='https://qr-dnpk.onrender.com/replit.html' target="_blank"><img alt='DEPLOY' src='https://img.shields.io/badge/-DEPLOY-black?style=for-the-badge&logo=replit&logoColor=white'/></a>
+<a href='https://jarvis-qr.vercel.app/replit' target="_blank"><img alt='DEPLOY' src='https://img.shields.io/badge/-DEPLOY-black?style=for-the-badge&logo=replit&logoColor=white'/></a>
 
 #### THANKS TO
 - [INRL ❤️](https://github.com/inrl-official) <br>

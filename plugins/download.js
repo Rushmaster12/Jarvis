@@ -1,4 +1,4 @@
-const { System, isPrivate, extractUrlsFromText, sleep, getJson, config, isUrl, IronMan, getBuffer, toAudio, instaDL } = require("../lib/");
+const { System, isPrivate, extractUrlsFromText, sleep, getJson, config, isUrl, IronMan, getBuffer, toAudio, instaDL, mediafireDl } = require("../lib/");
 
 
 System({
@@ -46,11 +46,14 @@ System({
     alias: ['facebook'],
     desc: 'Download Facebook video'
 }, async (message, text) => {
-    let match = (await extractUrlsFromText(text || message.reply_message.text))[0];
-    if (!match) return await message.reply("*Need a Facebook public media link*\n_Example: .fb_ \n*NOTE: ONLY VIDEO LINK*");       
+    let match = (await extractUrlsFromText(text || message.reply_message?.text))[0];
+    if (!match) return await message.reply("*Need a Facebook public media link*\n_Example: .fb_ \n*NOTE: ONLY VIDEO LINK*");
     const { result } = await getJson(api + "download/facebook?url=" + match);
-    await message.sendFromUrl(result.hd, { quoted: message.data });
+    if (!result || (!result.hd && !result.sd)) return await message.reply("Could not fetch video. Please check the link.");
+    if (!m.isGroup) return await message.sendFromUrl(result.hd, { quoted: message.data });
+    await message.send("Choose Quality", { values: [{ displayText: "HD", id: `sendurl ${result.hd}` }, { displayText: "SD", id: `sendurl ${result.sd}` }], onlyOnce: true, withPrefix: true, participates: [message.sender] }, "poll");
 });
+
 
 System({
     pattern: 'pinterest ?(.*)',
@@ -332,5 +335,30 @@ System({
         let url = await getJson(api + `search/xnxx?q=${match}`); 
         const { result } = await getJson(api + `download/xnxx?url=${url.result[0].link}`);
         await message.sendFromUrl(result.files.high, { caption: "👅💦" });
+    }
+});
+
+System({
+    pattern: "mediafire",
+    fromMe: isPrivate,
+    desc: "MediaFire downloader",
+    type: "download"
+}, async (message, match) => {
+    match = match || message.reply_message.text;
+    if (!match) return await message.reply("_Provide a MediaFire URL._");
+    const mediafireUrl = (await extractUrlsFromText(match))[0];
+    if (!mediafireUrl || !mediafireUrl.includes("mediafire")) return await message.reply("_It's not a valid MediaFire URL._");
+    const result = await mediafireDl(mediafireUrl);
+    for (const documentData of result) {
+        const downloadMessage = await message.reply(`_*Downloading --> ${documentData.name}*_`);
+        await message.send({
+            url: documentData.link
+        }, {
+            mimetype: documentData.mime,
+            fileName: documentData.name,
+            fileSize: documentData.size,
+            quoted: downloadMessage
+        }, "document");
+        await downloadMessage.edit("_*Download complete!*_");
     }
 });
