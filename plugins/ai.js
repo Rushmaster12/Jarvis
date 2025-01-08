@@ -17,9 +17,9 @@ const {
     isPrivate,
     interactWithAi,
     makeUrl,
-    gemini
+    gemini,
+    config
 } = require("../lib/");
-const config = require("../config.js");
 
 async function readMore() {
   const readmore = String.fromCharCode(8206).repeat(4001);
@@ -31,7 +31,7 @@ System({
     fromMe: isPrivate,
     desc: "ai thinkany", 
     type: "ai",
-}, async (message, match, m) => {
+}, async (m, match) => {
     match = match || m.reply_message.text;
     if(match && m.quoted) match = match + m.reply_message.text;
     if(!match) return m.reply("_*need query !!*_\n_*eg: .thinkany who is iron man*_");
@@ -44,7 +44,7 @@ System({
     fromMe: isPrivate,
     desc: "ai aoyo", 
     type: "ai",
-}, async (message, match, m) => {
+}, async (m, match) => {
     match = match || m.reply_message.text;
     if(match && m.quoted) match = match + m.reply_message.text;
     if(!match) return m.reply("_*need query !!*_\n_*eg: .aoyo who is iron man*_");
@@ -57,7 +57,7 @@ System({
     fromMe: isPrivate,
     desc: "prodia image gen ai", 
     type: "ai",
-}, async (message, match, m) => {
+}, async (m, match) => {
     match = match || m.reply_message.text;
     if(match && m.quoted) match = match + m.reply_message.text;
     if(!match) return m.reply("_*need query !!*_\n_*eg: .prodia a girl in full moon*_");
@@ -72,7 +72,7 @@ System({
     fromMe: isPrivate,
     desc: "dalle image gen ai", 
     type: "ai",
-}, async (message, match, m) => {
+}, async (m, match) => {
     match = match || m.reply_message.text;
     if(match && m.quoted) match = match + m.reply_message.text;
     if(!match) return m.reply("_*need query !!*_\n_*eg: .dalle a girl in full moon*_");
@@ -87,7 +87,7 @@ System({
     fromMe: isPrivate,
     desc: "ai lepton", 
     type: "ai",
-}, async (message, match, m) => {
+}, async (m, match) => {
     match = match || m.reply_message.text;
     if(match && m.quoted) match = match + m.reply_message.text;
     if(!match) return m.reply("_*need query !!*_\n_*eg: .lepton who is iron man*_");
@@ -100,7 +100,7 @@ System({
     fromMe: isPrivate,
     desc: "ai chatgpt", 
     type: "ai",
-}, async (message, match, m) => {
+}, async (m, match) => {
     match = match || m.reply_message.text;
     if(match && m.quoted) match = match + m.reply_message.text;
     if(!match) return m.reply("_*need query !!*_\n_*eg: .chatgpt who is iron man*_");
@@ -113,7 +113,7 @@ System({
     fromMe: isPrivate,
     desc: "blackbox ai", 
     type: "ai",
-}, async (message, match, m) => {
+}, async (m, match) => {
        match = match || m.reply_message.text;
        if(match && m.quoted) match = match + m.reply_message.text;
        if(!match) return m.reply("_*need query !!*_\n_*eg: .bb who is iron man*_");
@@ -126,7 +126,7 @@ System({
     fromMe: isPrivate,
     desc: "ai chatgpt", 
     type: "ai",
-}, async (message, match, m) => {
+}, async (m, match) => {
     match = match || m.reply_message.text;
     if(match && m.quoted) match = match + m.reply_message.text;
     if(!match) return m.reply("_*need query !!*_\n_*eg: .chatgpt who is iron man*_");
@@ -166,7 +166,7 @@ System({
   fromMe: isPrivate,
   desc: 'Detects AI-generated text',
   type: 'ai',
-}, async (message, match, m) => {
+}, async (message, match) => {
   const text = message.reply_message.text || match;
   const res = await fetch(IronMan(`ironman/ai/detectai?text=${encodeURIComponent(text)}`));
   const data = await res.json();
@@ -190,16 +190,15 @@ System({
    fromMe: isPrivate,
    desc: 'Chat with gemini ai',
    type: 'ai',
-}, async (message, match, m) => {
-
+}, async (message, match) => {
   if (match && message.reply_message?.image) {
       try {
          const path = await message.reply_message.downloadAndSaveMedia();
          const res = await gemini(match, path);
-	      if (!res) {
-            return m.reply("*Sorry, I couldn't get a response from Gemini AI.*");
+	if (!res) {
+            return message.reply("*Sorry, I couldn't get a response from Gemini AI.*");
          }
-             await m.send(res, {
+             await message.send(res, {
                contextInfo: {
                forwardingScore: 1,
                isForwarded: true,
@@ -211,14 +210,14 @@ System({
          });
       } catch (error) {
          console.error("Error processing image:", error);
-         m.reply("*Failed to process the image. Please try again.*");
+         message.reply("*Failed to process the image. Please try again.*");
       }
    } else if (match) {
       const res = await gemini(match);
          if (!res) {
-         return m.reply("*Sorry, I couldn't get a response from Gemini AI.*");
+         return message.reply("*Sorry, I couldn't get a response from Gemini AI.*");
       }
-           await m.send(res, {
+           await message.send(res, {
             contextInfo: {
             forwardingScore: 1,
             isForwarded: true,
@@ -229,7 +228,7 @@ System({
          }
       });
    } else {
-      m.reply("_*Need Prompt !!*_\n_*eg: .gemini who is iron man?*_\n _For image you have to Reply to an image and also give a prompt_");
+      message.reply("_*Need Prompt !!*_\n_*eg: .gemini who is iron man?*_\n _For image you have to Reply to an image and also give a prompt_");
    }
 });
 

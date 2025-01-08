@@ -20,23 +20,23 @@ const {
 } = require("../lib/");
   
   
-  System({
+System({
       pattern: "wm",
       fromMe: isPrivate,
       desc: "wame generator",
       type: "misc",
-  },async (message, match) => {
+},async (message, match) => {
       if (!message.quoted) return message.reply("_*Reply to a user*_");
       let sender = 'https://wa.me/' + (message.reply_message.sender || message.mention[0] || message.text).split('@')[0];
       await message.reply(sender);
-  });
+});
 
-  System({
+System({
   pattern: 'ss ?(.*)',
   fromMe: true,
   desc: 'Takes a screenshot of a website',
   type: 'misc',
-}, async (message, match, m) => {
+}, async (message, match) => {
   let url = (await extractUrlsFromText(match || message.reply_message.text))[0];
   if (!url) return await message.reply(`*Please provide a URL*`);
   if (!isUrl(url)) return await message.reply(`*Please provide a valid URL*`);

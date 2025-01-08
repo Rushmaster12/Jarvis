@@ -222,7 +222,6 @@ System({
     pattern: 'caption ?(.*)',
     fromMe: true,
     type: 'whatsapp',
-    alias: ['cap'],
     desc: 'Change video or image caption'
 }, async (message, match) => {
     if (!message.reply_message.video && !message.reply_message.image && !message.image && !message.video) return await message.reply('*_Reply to an image or video_*');
@@ -247,11 +246,11 @@ System({
 	fromMe: true,
 	desc: 'to change lastseen privacy',
 	type: 'privacy'
-}, async (message, match, m) => {
-	if (!match) return await message.send(`_*Example:-* ${m.prefix} all_\n_to change last seen privacy settings_`);
+}, async (message, match) => {
+	if (!match) return await message.send(`_*Example:-* ${message.prefix} all_\n_to change last seen privacy settings_`);
 	const available_privacy = ['all', 'contacts', 'contact_blacklist', 'none'];
 	if (!available_privacy.includes(match)) return await message.send(`_action must be *${available_privacy.join('/')}* values_`);
-	await message.client.updateLastSeenPrivacy(match)
+	await message.client.updateLastSeenPrivacy(match);
 	await message.send(`_Privacy settings *last seen* Updated to *${match}*_`);
 });
 
@@ -261,11 +260,11 @@ System({
 	fromMe: true,
 	desc: 'to change online privacy',
 	type: 'privacy'
-}, async (message, match, m) => {
-	if (!match) return await message.send(`_*Example:-* ${m.prefix} all_\n_to change *online*  privacy settings_`);
+}, async (message, match) => {
+	if (!match) return await message.send(`_*Example:-* ${message.prefix} online all_\n_to change *online*  privacy settings_`);
 	const available_privacy = ['all', 'match_last_seen'];
 	if (!available_privacy.includes(match)) return await message.send(`_action must be *${available_privacy.join('/')}* values_`);
-	await message.client.updateOnlinePrivacy(match)
+	await message.client.updateOnlinePrivacy(match);
 	await message.send(`_Privacy Updated to *${match}*_`);
 });
 
@@ -276,7 +275,7 @@ System({
 	desc: 'privacy setting profile picture',
 	type: 'privacy'
 }, async (message, match) => {
-	if (!match) return await message.send(`_*Example:-* ${cmd} all_\n_to change *profile picture*  privacy settings_`);
+	if (!match) return await message.send(`_*Example:-* ${message.prefix} mypp all_\n_to change *profile picture*  privacy settings_`);
 	const available_privacy = ['all', 'contacts', 'contact_blacklist', 'none'];
 	if (!available_privacy.includes(match)) return await message.send(`_action must be *${available_privacy.join('/')}* values_`);
 	await message.client.updateProfilePicturePrivacy(match)
@@ -290,7 +289,7 @@ System({
 	desc: 'privacy for my status',
 	type: 'privacy'
 }, async (message, match) => {
-	if (!match) return await message.send(`_*Example:-* ${cmd} all_\n_to change *status*  privacy settings_`);
+	if (!match) return await message.send(`_*Example:-* mystatus all_\n_to change *status*  privacy settings_`);
 	const available_privacy = ['all', 'contacts', 'contact_blacklist', 'none'];
 	if (!available_privacy.includes(match)) return await message.send(`_action must be *${available_privacy.join('/')}* values_`);
 	await message.client.updateStatusPrivacy(match)
@@ -302,11 +301,11 @@ System({
 	fromMe: true,
 	desc: 'privacy for read message',
 	type: 'privacy'
-}, async (message, match, m) => {
-	if (!match) return await message.send(`_*Example:-* ${m.prefix} all_\n_to change *read and receipts message*  privacy settings_`);
+}, async (message, match) => {
+	if (!match) return await message.send(`_*Example:-* ${message.prefix} read all_\n_to change *read and receipts message*  privacy settings_`);
 	const available_privacy = ['all', 'none'];
 	if (!available_privacy.includes(match)) return await message.send(`_action must be *${available_privacy.join('/')}* values_`);
-	await message.client.updateReadReceiptsPrivacy(match)
+	await message.client.updateReadReceiptsPrivacy(match);
 	await message.send(`_Privacy Updated to *${match}*_`);
 });
 
@@ -316,8 +315,8 @@ System({
 	fromMe: true,
 	desc: 'privacy for group add',
 	type: 'privacy'
-}, async (message, match, m) => {
-	if (!match) return await message.send(`_*Example:-* ${m.prefix} all_\n_to change *group add*  privacy settings_`);
+}, async (message, match) => {
+	if (!match) return await message.send(`_*Example:-* ${message.prefix} groupadd all_\n_to change *group add*  privacy settings_`);
 	const available_privacy = ['all', 'contacts', 'contact_blacklist', 'none'];
 	if (!available_privacy.includes(match)) return await message.send(`_action must be *${available_privacy.join('/')}* values_`);
 	await message.client.updateGroupsAddPrivacy(match)
@@ -329,10 +328,10 @@ System({
     fromMe: true,
     type: 'whatsapp',
     desc: 'pin a message in chat'
-}, async (message, match, m) => {
+}, async (message, match) => {
     if (!message.quoted || !match) return await message.reply(`_Reply to a message to pin it_\n\n*Example*: _msgpin 24 =for pin msg for 24 hour_\n _msgpin 7 = for pin msg for 7days_\n _msgpin 30 = for pin msg for 30 days_`);
     var array = { '24': 86400, '7': 604800, '30': 2592000 };
     var time = array[match];
     if (!time) return await message.reply(`_Reply to a message to pin it_\n\n*Example*: _msgpin 24 =for pin msg for 24 hour_\n _msgpin 7 = for pin msg for 7days_\n _msgpin 30 = for pin msg for 30 days_`);
-    await message.reply(await message.reply_message.data.key, { type: 1, time }, "pin");
+    await message.reply(message.reply_message.data.key, { type: 1, time }, "pin");
 });

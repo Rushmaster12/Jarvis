@@ -13,7 +13,6 @@ const fs = require('fs');
 const ff = require('fluent-ffmpeg');
 const { Image } = require("node-webpmux");
 const { fromBuffer } = require('file-type');
-const { Sticker, StickerTypes } = require("wa-sticker-formatter");
 const { exec } = require("child_process");
 const axios = require("axios");
 const {
@@ -36,7 +35,12 @@ const {
     extractUrlsFromText,
     makeUrl
 } = require("../lib/");
-const { trim, elevenlabs, removeBg } = require("./client/"); 
+const { 
+    trim,
+    elevenlabs,
+    removeBg,
+    createRoundSticker
+} = require("./client/"); 
 const stickerPackNameParts = config.STICKER_PACKNAME.split(";");
 const fancy = require('./client/fancy');
 
@@ -57,7 +61,7 @@ System({
     fromMe: isPrivate,
     desc: "mp3 converter",
     type: "converter",
-}, async (message, match, m) => {
+}, async (message, match) => {
    if (!(message.reply_message.video || message.reply_message.audio))
    return await message.reply("_Reply to audio or video_");	
    var audioResult = await toAudio(await message.reply_message.download());
@@ -137,28 +141,6 @@ System({
         ffmpeg.run();
 });
 
-
-System({
-    pattern: "round",
-    fromMe: isPrivate,
-    desc: "Changes photo to sticker",
-    type: "converter",
-}, async (msg) => {
-   if (!(msg.image || msg.reply_message.sticker || msg.reply_message.image)) return await msg.reply("_*Reply to photo or sticker*_");
-   if (msg.reply_message.isAnimatedSticker) return await message.reply("_Reply to a non-animated sticker message_");
-   let media = await msg.downloadMediaMessage(msg.image ? msg : msg.quoted ? msg.reply_message : null);
-   let sticker = new Sticker(media, {
-        pack: stickerPackNameParts[0], 
-        author: stickerPackNameParts[1], 
-        type: StickerTypes.ROUNDED ,
-        categories: ["🤩", "🎉"], 
-        id: "https://github.com/Loki-Xer/jarvis-md",
-        quality: 75, 
-   });
-   const buffer = await sticker.toBuffer();
-   await msg.reply(buffer, {}, "sticker");
-});
-
 System({
     pattern: "fancy",
     fromMe: isPrivate,
@@ -186,38 +168,7 @@ System({
    if (!(message.image || message.reply_message.sticker || message.reply_message.image)) return await message.reply("_*Reply to photo or sticker*_");
    if (message.reply_message.isAnimatedSticker) return await message.reply("_Reply to a non-animated sticker message_");
    let media = await message.downloadMediaMessage(message.image ? message : message.quoted ? message.reply_message : null);
-   let sticker = new Sticker(media, {
-        pack: stickerPackNameParts[0], 
-        author: stickerPackNameParts[1], 
-        type: StickerTypes.CIRCLE ,
-        categories: ["🤩", "🎉"],
-        id: "https://github.com/Loki-Xer/jarvis-md", 
-        quality: 75,
-   });
-  const buffer = await sticker.toBuffer();
-  await message.reply(buffer, {}, "sticker");
-});
-
-
-System({
-    pattern: "crop",
-    fromMe: isPrivate,
-    desc: "Changes photo to sticker",
-    type: "converter",
-}, async (msg) => {
-   if (!(msg.image || msg.reply_message.sticker || msg.reply_message.image)) return await msg.reply("_*Reply to photo or sticker*_");  
-   if (msg.reply_message.isAnimatedSticker) return await msg.reply("_Reply to a non-animated sticker message_");
-   let media = await msg.downloadMediaMessage(msg.image ? msg : msg.quoted ? msg.reply_message : null);
-   let sticker = new Sticker(media, {
-        pack: stickerPackNameParts[0], 
-        author: stickerPackNameParts[1], 
-        type: StickerTypes.CROPPED,
-        categories: ["🤩", "🎉"],
-        id: "https://github.com/Loki-Xer/jarvis-md", 
-        quality: 75, 
-   });
-   const buffer = await sticker.toBuffer();
-   await msg.reply(buffer, {}, "sticker");
+   await message.send(await createRoundSticker(media), { packname: stickerPackNameParts[0], author: stickerPackNameParts[1] }, "sticker");
 });
 
 System({
@@ -227,7 +178,7 @@ System({
     type: "converter",
 }, async (message, match) => {
    let data;
-   if (!message.reply_message || (!message.reply_message.sticker && !message.reply_message.audio)) return await message.reply("_Reply to a sticker or audio_");
+   if (!message.quoted || (!message.reply_message.sticker && !message.reply_message.audio)) return await message.reply("_Reply to a sticker or audio_");
    if (message.reply_message.sticker) {
    const stickerPackName = (match || config.STICKER_PACKNAME).split(";");
    await message.send(await message.reply_message.download(), { packname: stickerPackName[0], author: stickerPackName[1] }, "sticker");
@@ -258,9 +209,8 @@ System({
     fromMe: isPrivate,
     desc: "get exif data",
     type: "converter",
-}, async (message, match, m) => {
-   if (!message.reply_message || !message.reply_message.sticker)
-   return await message.reply("_Reply to sticker_");
+}, async (message, match) => {
+   if (!message.reply_message || !message.reply_message.sticker) return await message.reply("_Reply to sticker_");
    let img = new Image();
    await img.load(await message.reply_message.download());
    const exif = JSON.parse(img.exif.slice(22).toString());
@@ -330,8 +280,8 @@ System({
     fromMe: isPrivate,
     desc: "make media into url",
     type: "converter",
-}, async (message, match, m) => {
-    if (!message.reply_message.i || (!message.reply_message.image && !message.reply_message.video && !message.reply_message.audio && !message.reply_message.sticker)) return await message.reply('*Reply to image,video,audio,sticker*');
+}, async (message, match) => {
+    if (!message.quoted || (!message.reply_message.image && !message.reply_message.video && !message.reply_message.audio && !message.reply_message.sticker)) return await message.reply('*Reply to image,video,audio,sticker*');
     return await sendUrl(message);
 });
 
@@ -386,7 +336,7 @@ System({
     fromMe: isPrivate,
     desc: 'Shortern a URL using Bitly',
     type: 'converter',
-}, async (message, text, m) => {
+}, async (message, text) => {
     const longUrl = (await extractUrlsFromText(text || message.reply_message.text))[0];
     if (!longUrl) return await message.reply('*Please provide a URL to shorten.*');
     const { result } = await getJson(api + "tools/bitly?q=" + longUrl);
@@ -399,8 +349,9 @@ System({
   fromMe: isPrivate,
   desc: "change language",
   type: "converter",
-}, async (message, match, m) => {
+}, async (message, match) => {
   match = message.reply_message.text || match;
+  if(message.quoted && message.reply_message.text && match) match = message.reply_message.text + ";" + match;
   if (!match) return await message.reply("_provide text to translate *eg: i am fine;ml*_");
   const text = match.split(";");  
   const result = await translate(text[0], text[1] || config.LANG);

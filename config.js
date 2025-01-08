@@ -1,13 +1,12 @@
 const { Sequelize } = require('sequelize');
+const { loadEnv } = require("jarvis-md");
 const fs = require('fs');
 
 if (fs.existsSync('config.env')) {
-  require('dotenv').config({
-      path: './config.env'
-  });
+  loadEnv('config.env');
 };
 
-global.api = 'https://nervous-rosamond-jarvis-bot-99587a26.koyeb.app/';
+global.api = 'https://enthusiastic-ag-lokiking-524102b4.koyeb.app/';
 
 const toBool = (x) => (x && (x.toLowerCase() === 'true' || x.toLowerCase() === 'on')) || false;
 const DATABASE_URL = process.env.DATABASE_URL === undefined ? "./database.db" : process.env.DATABASE_URL
@@ -29,7 +28,7 @@ module.exports = {
   SESSION_ID: process.env.SESSION_ID || '',
   LANG: (process.env.LANGUAGE || 'EN').toLowerCase(),
   SETVV: process.env.SETVV || 'DM',
-  ELEVENLABS: process.env.ELEVENLABS,
+  ELEVENLABS: process.env.ELEVENLABS || "sk_c7a40b212be5570d6f554646775093fff80c7cae637bdc94",
   HANDLERS: (process.env.HANDLERS || process.env.HANDLER || process.env.PREFIX || "^[.,!]").trim(),
   ALLWAYS_ONLINE: toBool(process.env.ALLWAYS_ONLINE || "false"),
   READ_MSG: toBool(process.env.READ_MSG || "false"),
@@ -55,6 +54,7 @@ module.exports = {
   MENU_FONT: process.env.MENU_FONT || "0;0",
   SUDO: process.env.SUDO || '',
   STATUS_REPLY: toBool(process.env.STATUS_REPLY || "false"),
+  AUTH_FILE: process.env.AUTH_FILE,
   STATUS_REPLY_MSG: process.env.STATUS_REPLY_MSG || "*Nice Status Brother 🦫✨*",
   KICK_BLOCK: toBool(process.env.KICK_BLOCK || "false"),
   CMD_REACTION: toBool(process.env.CMD_REACTION || 'false'),

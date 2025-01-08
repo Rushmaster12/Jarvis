@@ -18,7 +18,7 @@ System({
     fromMe: isPrivate,
     desc: 'Searches Google',
     type: 'search',
-}, async (message, match, m) => {
+}, async (message, match) => {
     if (!match) return await message.reply("*Need a query to search*\n_Example: who is iron man_");
     const data = await Google(match);
     let response = '';
@@ -77,7 +77,7 @@ System({
     fromMe: isPrivate,
     desc: "Get details of a Device",
     type: "search"
-}, async (message, match, m) => {
+}, async (message, match) => {
     if (!match) return await message.reply("*Need a device name*\n_Example: device Xiaomi 11 i_");
     var data = await getJson(IronMan(`ironman/device?query=${match}`));
     if (Array.isArray(data) && data.length > 0) {
@@ -94,7 +94,7 @@ System({
     fromMe: isPrivate,
     desc: 'wallpaper search',
     type: 'search'
-}, async (message, match, m) => {
+}, async (message, match) => {
     if (!match) return await message.reply("*Need a wallpaper name*\n_Example: .wallpaper furina_");
     const images = await getJson(IronMan(`ironman/wallpaper/wlhven?name=${encodeURIComponent(match)}`));
     const urls = images.filter(item => item.url).map(item => item.url);
@@ -153,7 +153,7 @@ System({
   fromMe: isPrivate,
   desc: 'Search for songs on Spotify',
   type: 'search',
-}, async (message, match, m) => {
+}, async (message, match) => {
   if (!match) return await message.reply("*Give a Spotify query to search*\n_Example: .sps yoasobi idol_");
   const query = match.startsWith('-full') ? match.slice(5).trim() : match;
   const result = await getJson(IronMan(`ironman/spotify/s?query=${query}`));
@@ -173,7 +173,7 @@ System({
   desc: 'Searches for an app on Play Store',
   alias: ['ps'],
   type: 'search',
-}, async (message, match, m) => {
+}, async (message, match) => {
   if (!match) return await message.reply("*Nᴇᴇᴅ ᴀɴ ᴀᴘᴘ ɴᴀᴍᴇ*\n*Example.ps WhatsApp*");
   const query = match.startsWith('-full') ? match.slice(5).trim() : match;
   const result = await getJson(IronMan(`ironman/search/playstore?app=${query}`));
@@ -193,9 +193,8 @@ System({
     desc: 'Search for song lyrics',
 }, async (message, match) => {
     if(!match) return await message.reply("*Need a song name!*\n_Example: .lyrics let me die_");
-    const [song, author] = match.split(/\s+by\s+/i);
-    const res = await fetch(IronMan(`ironman/song/lrc?track_name=${encodeURIComponent(song)}${author ? `&artist_name=${encodeURIComponent(author)}` : ''}`));
-    if (!res.ok) return await message.send("Error fetching lyrics. Please try again later.");
+    var res = await fetch(IronMan(`ironman/song/lrc?track_name=${encodeURIComponent(match)}`));
+    if (!res.ok) return await message.send("Error fetching lyrics.");
     const { title, artist, lyrics, image } = await res.json();
     const caption = `*Title:* ${title}\n*Artist:* ${artist}\n\n${lyrics}`;
     await message.send({ url: image }, { caption, quoted: message }, "image");

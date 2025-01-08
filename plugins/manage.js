@@ -28,9 +28,9 @@ System({
     onlyGroup: true,
     adminAccess: true,
     desc: 'remove users who use restricted words'
-}, async (message, match, m) => {
+}, async (message, match) => {
     if (!match) return await message.reply("_*antiword* on/off_\n_*antiword* action warn/kick/null_");
-        const antiword = await transformData(message.jid, "antiword")
+    const antiword = await transformData(message.jid, "antiword")
     if(match.toLowerCase() == 'get') {
     	const status = antiword && antiword.status == 'true' ? true : false
         if(!status  || !antiword.value) return await message.send('_Not Found_');
@@ -241,7 +241,7 @@ System({
 }, async (message, match) => {
     const { welcome } = await getData(message.from);
     if (match.toLowerCase() === 'get') {
-        if (!welcome || !welcome.message) return await message.send('*_Not Set Yet_*');
+        if (!welcome && !welcome.message) return await message.send('*_Not Set Yet_*');
         return await message.send(welcome.message);
     } else if (match.toLowerCase() === 'off') {
         const status = welcome && welcome.status ? welcome.status : 'false';
@@ -271,7 +271,7 @@ System({
 }, async (message, match) => {
     const { exit } = await getData(message.jid);
     if (match.toLowerCase() === 'get') {
-        if (!exit || !exit.message) return await message.send('*_Not Set Yet_*');
+        if (!exit && !exit.message) return await message.send('*_Not Set Yet_*');
         return await message.send(exit.message);
     } else if (match.toLowerCase() === 'off') {
         const status = exit && exit.status ? exit.status : 'false';

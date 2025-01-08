@@ -13,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
 const { Message } = require("../lib/Base/");  
-const { System, sendAlive, setData, getData, isPrivate, config, IronMan, database, removeData, } = require("../lib/");  
+const { System, sendAlive, setData, getData, isPrivate, config, IronMan, database, removeData, removeCmd, bot } = require("../lib/");  
 const { getUptime, Runtime } = require("./client/"); 
 
 System({
@@ -67,9 +67,9 @@ System({
    fromMe: true,
    desc: "to reboot your bot",
    type: "tool",
-}, async (message, match, m) => {
+}, async (message, match) => {
     await message.reply('_Rebooting..._')
-    require('pm2').restart('index.js');
+    bot.restart();
 });
 
 System({
@@ -152,7 +152,7 @@ System({
     fromMe: isPrivate,
     desc: 'Sends the result of a mathematical expression',
     type: 'tool',
-}, async (message, match, m) => {
+}, async (message, match) => {
     if (!match) return await message.reply("*EXAMPLE* *:* _.calc 2+2_");
     const [a, op, b] = match.trim().match(/(\d+)\s*([-+*\/])\s*(\d+)/).slice(1);
     const result = ((x, y) => op === '/' && y == 0 ? "Error: Division by zero" : eval(`${x}${op}${y}`))(parseFloat(a), parseFloat(b));
@@ -167,8 +167,7 @@ System({
     desc: "set a sticker as a cmd",
     type: "tool",
 }, async (message, match) => { 
-    if (!message.reply_message || !message.reply_message.i || !message.reply_message.msg || !message.reply_message.msg.fileSha256) 
-    return await message.reply('_Reply to an image/video/audio/sticker_'); 
+    if (!message.quoted || !message.reply_message.msg || !message.reply_message.msg.fileSha256) return await message.reply('_Reply to an image/video/audio/sticker_'); 
     if (!match) return await message.reply('_Example: setcmd ping_'); 
     const hash = message.reply_message.msg.fileSha256.join("");
     const setcmd = await setData(hash, match, "true", "setCmd");
@@ -182,9 +181,13 @@ System({
     desc: 'to delete audio/image/video cmd',
     type: 'tool'
 }, async (message, match) => {
-    if (!message.reply_message || !message.reply_message.i) 
-    return await message.reply('_Reply to an image/video/audio/sticker_');
-    let hash = message.reply_message.msg.fileSha256.join("")
+    if (!match && !message.quoted) return await message.reply('_Send a cmd name to remove it or reply to an image/video/audio/sticker_');
+    if(match) {
+	const cmd = await removeCmd(match);
+	if(!cmd) return await message.reply('_Failed_');
+	return await message.reply('_Success_');
+    };
+    const hash = message.reply_message.msg.fileSha256.join("");
     if (!hash) return await message.reply('_Failed_');
     const delcmd = await removeData(hash, "setCmd");
     if (!delcmd) return await message.reply('_Failed_');
@@ -213,7 +216,7 @@ System({
    let msg;
    const { mention } = await getData(message.user.id);    
     if (match === 'get' && message.sudo.includes(message.sender)) {
-        return await message.send(mention.message);
+        return await message.send(mention?.message || '_*mention not set yet*_');
     } else if (match && message.sudo.includes(message.sender)) {
         if (match === "off") {
             msg = await setData(message.user.id, mention.message, "false", "mention");

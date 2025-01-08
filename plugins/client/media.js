@@ -1,4 +1,5 @@
 const ffmpeg = require('fluent-ffmpeg');
+const sharp = require('sharp'); 
 const fs = require('fs');
 
 const audioCut = (infile, start, end, filename = "cutted") => new Promise((resolve, reject) => {
@@ -34,6 +35,30 @@ async function trim(buff, startTrim, endTrim) {
     } catch (error) {
         return false;;
     }
-}
+};
 
-module.exports = { trim, audioCut };
+
+async function createRoundSticker(mediaBuffer) {
+  const roundedSticker = await sharp(mediaBuffer)
+    .resize(512, 512) 
+    .composite([
+      {
+        input: Buffer.from(
+          '<svg><circle cx="256" cy="256" r="256" fill="white" /></svg>' 
+        ),
+        blend: 'dest-in' 
+      }
+    ])
+    .webp({ quality: 75 }) 
+    .toBuffer();
+
+  return roundedSticker;
+};
+
+
+
+module.exports = { 
+  trim, 
+  audioCut,
+  createRoundSticker
+};

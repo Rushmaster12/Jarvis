@@ -10,13 +10,11 @@ Jarvis - Loki-Xer
 ------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
-const { System, isPrivate } = require('../lib');
+const { System, isPrivate, yts } = require('../lib');
 const { audioCut } = require("./client/"); 
 const FormData = require('form-data');
-const fetch = require('node-fetch');
+const axios = require('axios');  
 const crypto = require('crypto');
-const yts = require("yt-search");
-const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 
 function buildStringToSign(
@@ -45,8 +43,8 @@ System({
     fromMe: isPrivate,
     desc: 'Find details of a song',
     type: 'search',
-}, async (message, match, m) => {
-    if (!message.reply_message || (!message.reply_message.audio && !message.reply_message.video)) return await message.reply('*Reply to audio or video*');
+}, async (message, match) => {
+    if (!message.quoted || (!message.reply_message.audio && !message.reply_message.video)) return await message.reply('*Reply to audio or video*');
     const p = await message.reply_message.downloadAndSave();
     const options = {
        host: 'identify-eu-west-1.acrcloud.com',
@@ -78,17 +76,18 @@ System({
     form.append('signature', signature);
     form.append('timestamp', timestamp);
 
-    const res = await fetch('http://' + options.host + options.endpoint, {
-        method: 'POST',
-        body: form,
+    const res = await axios.post('http://' + options.host + options.endpoint, form, {
+        headers: form.getHeaders()
     });
-    const { status, metadata } = await res.json();
-    if (status.msg != 'Success') {
+
+    const { status, metadata } = res.data;
+    if (status.msg !== 'Success') {
         return await message.reply(status.msg);
     }
+    
     const { album, release_date, artists, title } = metadata.music[0];
     const yt = await yts(title);
 
-    const cap = `*_${yt.videos[0].title}_*\n\n\n*Album :* ${album.name || ''}\n*Artists :* ${artists !== undefined ? artists.map((v) => v.name).join(', ') : ''}\n*Release Date :* ${release_date}\n\n\`\`\`1.⬢\`\`\` *audio*\n\`\`\`2.⬢\`\`\` *video*\n\n_*Send a number as a reply to download*_`
-    await message.send({ url: yt.videos[0].image }, { caption: cap }, "image");
+    const cap = `*_${yt[0].title}_*\n\n\n*Album :* ${album.name || ''}\n*Artists :* ${artists !== undefined ? artists.map((v) => v.name).join(', ') : ''}\n*Release Date :* ${release_date}\n\n\`\`\`1.⬢\`\`\` *audio*\n\`\`\`2.⬢\`\`\` *video*\n\n_*Send a number as a reply to download*_`;
+    await message.send({ url: yt[0].image }, { caption: cap }, "image");
 });

@@ -5,7 +5,7 @@ System({
   fromMe: isPrivate,
   desc: 'Get tech news',
   type: 'news',
-}, async (message, match, m) => {
+}, async (message, match) => {
   const techNews = new TechNews();
   const topic = match.toLowerCase();
   const availableTopics = ['gadgets', 'technology', 'laptops', 'reviews', 'science', 'gallery', 'videos', 'mobiles', 'techook'];

@@ -1,4 +1,4 @@
-const { System, setSchedule, getSchedule, delSchedule } = require('../lib/');
+const { System, setSchedule, getSchedule, delSchedule, bot } = require('../lib/');
 const { parsedJid, formatDateTime, reformatDateTime } = require("./client/"); 
 
 
@@ -16,7 +16,7 @@ System({
     if (!jid || !newFormat) return message.reply("-> *Example :*\n*setschedule jid, HH:MM AM/PM (time) DAY-MONTH-YEAR*\n-> *Example :.setschedule xxx@s.whatsapp.net,10:30 PM 19-11-2024*"); 
     await setSchedule(jid, newFormat, "true", message.reply_message.message);
     await message.send(`_successfully scheduled to send at ${time}_`);
-    require('pm2').restart('index.js');
+    bot.restart();
 });
 
 System({
@@ -51,5 +51,5 @@ System({
     const schedule = await delSchedule(jid, newFormat);
     if(!schedule.status) return await message.send('_Schedule not found_');
     return await message.send('_Schedule deleted_');
-    require('pm2').restart('index.js');
+    bot.restart();
 });

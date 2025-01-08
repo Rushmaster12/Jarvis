@@ -11,6 +11,7 @@ Jarvis - Loki-Xer
 
 
 const {
+    yts,
     isUrl,
     System,
     config,
@@ -23,7 +24,6 @@ const {
     AddMp3Meta,
     extractUrlsFromText
 } = require('../lib/');
-const yts = require("yt-search");
 
 
 System({
@@ -40,7 +40,7 @@ System({
          await message.reply("_*" + "downloading " + title + "*_");
          return await message.send({ url: url }, { caption: '*made with 🤍*', quoted: message.data }, 'video');
       } else {
-        const { url } = (await yts(match)).videos[0];
+        const { url } = (await yts(match))[0];
         const data = await youtube(url, "video");
         await message.reply("_*" + "downloading " + data.title + "*_"); 
         return await message.send({ url: data.url }, { caption: '*made with 🤍*', quoted: message.data }, 'video');
@@ -63,7 +63,7 @@ System({
         const qualities = data.download.map((item, index) => `${index + 1}. ${item.quality}`).join('\n');
         return await message.reply(`_*${data.title}*_\n\nAvailable qualities:\n${qualities}\n\n*Reply with the number to download the video in that quality*\n✧${matchUrl}`);
     } else {
-        const { url } = (await yts(match)).videos[0];
+        const { url } = (await yts(match))[0];
         const data = await youtube(url, "mp4", "all");
         if (!data.download || data.download.length === 0) return await message.reply('No download links found.');
         const qualities = data.download.map((item, index) => `${index + 1}. ${item.quality}`).join('\n');
@@ -88,7 +88,7 @@ System({
           const aud = await AddMp3Meta(await toAudio(await getBuffer(url)), await getBuffer(thumbnail), { title: title, body: author });
           await message.reply(aud, { mimetype: 'audio/mpeg' }, "audio");
       } else {
-          const { title, author, thumbnail, url } = (await yts(match)).videos[0];
+          const { title, author, thumbnail, url } = (await yts(match))[0];
           await message.reply("_*" + "downloading " + title + "*_");
           const aud = await AddMp3Meta(await toAudio(await getBuffer((await youtube(url)).url)), await getBuffer(thumbnail), { title: title, body: author.name });
           await message.reply(aud, { mimetype: 'audio/mpeg' }, "audio");
@@ -107,7 +107,7 @@ System({
           const yt = await YtInfo(matchUrl);
           return await message.reply(`*_${yt.title}_*\n\n\n\`\`\`1.⬢\`\`\` *audio*\n\`\`\`2.⬢\`\`\` *video*\n\n_*Send a number as a reply to download*_`, { contextInfo: { externalAdReply: { title: yt.author, body: yt.seconds, thumbnail: await getBuffer(yt.thumbnail), mediaType: 1, mediaUrl: yt.url, sourceUrl: yt.url, showAdAttribution: false, renderLargerThumbnail: true }}});
       } else {
-          const yt = (await yts(match)).videos[0];
+          const yt = (await yts(match))[0];
           return await message.reply(`*_${yt.title}_*\n\n\n\`\`\`1.⬢\`\`\` *audio*\n\`\`\`2.⬢\`\`\` *video*\n\n_*Send a number as a reply to download*_`, { contextInfo: { externalAdReply: { title: yt.author.name, body: yt.ago, thumbnail: await getBuffer(yt.image), mediaType: 1, mediaUrl: yt.url, sourceUrl: yt.url, showAdAttribution: false, renderLargerThumbnail: true }}});
       }
 });
@@ -122,13 +122,13 @@ System({
     if (!message.body.includes('⬢')) return;
     let match = message.body.replace('⬢', '');
     if (message.body.includes('1')) {
-      const ytAudio = (await yts(match)).videos[0];
+      const ytAudio = (await yts(match))[0];
       const msg = await message.send(`_*Now playing : ${ytAudio.title} 🎶*_`);
       const data = config.AUDIO_DATA.split(';');
       const aud = await AddMp3Meta(await toAudio(await getBuffer((await youtube(ytAudio.url)).url), 'mp3'), await getBuffer(data[2]), { title: data[0], body: data[1], });
       await message.reply(aud, { mimetype: 'audio/mpeg', contextInfo: { externalAdReply: { title: ytAudio.author.name, body: ytAudio.ago, thumbnail: await getBuffer(ytAudio.image), mediaType: 1, mediaUrl: ytAudio.url, sourceUrl: ytAudio.url, showAdAttribution: false, renderLargerThumbnail: true } }, quoted: msg }, "audio");
     } else if (message.body.includes('2')) {
-      const data = (await yts(match)).videos[0];
+      const data = (await yts(match))[0];
       const q = await message.send(`_*Now playing : ${data.title} 🎶*_`);
       await message.send(
         await getBuffer((await youtube(data.url, "video")).url), { caption: `_*${data.title}*_`, quoted: q }, 'video');
@@ -148,7 +148,7 @@ System({
         await message.reply(`*_${yt.title}_*\n\n\n\`\`\`1.⬢\`\`\` *audio*\n\`\`\`2.⬢\`\`\` *video*\n\n_*Send a number as a reply to download*_`, { contextInfo: { externalAdReply: { title: yt.author, body: yt.seconds, thumbnail: await getBuffer(yt.thumbnail), mediaType: 1, mediaUrl: yt.url, sourceUrl: yt.url, showAdAttribution: false, renderLargerThumbnail: true }}});
       } else {
         const videos = await yts(match);
-        const result = videos.all.map(video => `*🏷️ Title :* _*${video.title}*_\n*📁 Duration :* _${video.duration}_\n*🔗 Link :* _${video.url}_`);
+        const result = videos.map(video => `*🏷️ Title :* _*${video.title}*_\n*📁 Duration :* _${video.duration}_\n*🔗 Link :* _${video.url}_`);
         return await message.reply(`\n\n_*Result Of ${match} 🔍*_\n\n`+result.join('\n\n')+"\n\n*🤍 صنع بواسطة لوكي*")
       }
   });

@@ -46,13 +46,14 @@ System({
     alias: ['facebook'],
     desc: 'Download Facebook video'
 }, async (message, text) => {
-    let match = (await extractUrlsFromText(text || message.reply_message?.text))[0];
-    if (!match) return await message.reply("*Need a Facebook public media link*\n_Example: .fb_ \n*NOTE: ONLY VIDEO LINK*");
+    var match = (await extractUrlsFromText(text || message.reply_message?.text))[0];
+    if (!match) return await message.reply("*Need a Facebook public media link*\n_Example: .fb_\n*NOTE: ONLY VIDEO LINK*");
     const { result } = await getJson(api + "download/facebook?url=" + match);
     if (!result || (!result.hd && !result.sd)) return await message.reply("Could not fetch video. Please check the link.");
-    if (!m.isGroup) return await message.sendFromUrl(result.hd, { quoted: message.data });
+    if (!message.isGroup) return await message.sendFromUrl(result.hd, { quoted: message.data });
     await message.send("Choose Quality", { values: [{ displayText: "HD", id: `sendurl ${result.hd}` }, { displayText: "SD", id: `sendurl ${result.sd}` }], onlyOnce: true, withPrefix: true, participates: [message.sender] }, "poll");
 });
+
 
 
 System({
@@ -124,25 +125,18 @@ System({
   const link = (await extractUrlsFromText(match || message.reply_message.text))[0];
   if (!link || !link.includes('soundcloud')) return await message.send("*Need a SoundCloud link to download*\n_Example: .soundcloud https://m.soundcloud.com/corpse_husband/life-waster_");
     const response = await getJson(IronMan(`ironman/soundcloud/download?link=${link}`));
-    const q = await message.send(`*Downloading ${response.title}*`);
-    const url = IronMan(`ironman/scdl?url=${link}`);
-    const aud = await getBuffer(url);
-    const img = await getBuffer(response.thumb);
-    const result = await toAudio(aud, 'mp3');
+    await message.send(`*Downloading ${response.title}*`);
+    const result = await toAudio(await getBuffer(IronMan(`ironman/scdl?url=${link}`)), 'mp3');
     await message.reply(result, {
       mimetype: 'audio/mpeg',
-      contextInfo: {
-        externalAdReply: {
+      linkPreview: {
           title: response.title,
-          body: 'ᴊᴀʀᴠɪꜱ-ᴍᴅ',
-          thumbnail: img,
-          mediaType: 1,
-          mediaUrl: url,
+          body: '*Jarvis-md*',
+          thumbnail: await getBuffer(response.thumb),
           sourceUrl: link,
           showAdAttribution: false,
           renderLargerThumbnail: true
         }
-      }
     }, "audio");
 });
 
@@ -182,14 +176,14 @@ System({
     pattern: 'twitter ?(.*)',
     fromMe: isPrivate,
     type: 'download',
-    alias: ['tw'],
+    alias: ['twdl'],
     desc: 'Download Twitter video'
 }, async (message, match, m) => {
-    match = match || message.reply_message.text;
+    match = message.quoted && message.reply_message.text ? message.reply_message.text : match;
     if (!match || !match.includes('x.com')) return await message.send("_Need a x(twitter) media url_");
     const url = (await extractUrlsFromText(match))[0];
-    const { media } = await getJson(IronMan(`ironman/dl/x?url=${encodeURIComponent(url)}`));
-    await message.sendFromUrl(media[0].url);
+    const fek = await getJson(IronMan(`ironman/dl/x?url=${encodeURIComponent(url)}`));
+    await message.sendFromUrl(fek.download);
 });
 
 System({
@@ -198,7 +192,7 @@ System({
     type: 'download',
     desc: 'Download threads media',
 }, async (message, match) => {
-    match = match || message.reply_message.text;
+    match = message.quoted && message.reply_message.text ? message.reply_message.text : match;
     if (!match || !match.includes('threads')) return await message.send("_Need a threads media url_");
     const encodedUrl = encodeURIComponent((await extractUrlsFromText(match.trim()))[0]);
     const media = await getJson(IronMan(`ironman/dl/threads?url=${encodedUrl}`));
@@ -229,26 +223,35 @@ System({
  });
 
 System({
-  pattern: 'tiktok ?(.*)',
-  fromMe: isPrivate,
-  type: 'download',
-  desc: 'Sends TikTok video or image'
+	pattern: 'tiktok ?(.*)',
+	fromMe: isPrivate,
+	type: 'download',
+	desc: 'Download TikTok video or image'
 }, async (message, match, msg) => {
   match = (await extractUrlsFromText(match || message.reply_message.text))[0];
   if (!isUrl(match)) return message.reply("*Reply to TikTok URL or provide a TikTok URL*");
   if (!match || !match.includes("tiktok")) return message.reply("*Reply to TikTok URL or provide a TikTok URL*");
   const { result: data } = await getJson(api + "download/tiktok?url=" + match);
   var vidd = data.data.find(item => item.type === 'nowatermark_hd');
+  var ved = data.data.find(item => item.type === 'nowatermark');
   var pic = data.data.filter(item => item.type === 'photo');
-  if (vidd) {
-    await message.reply({ url: vidd.url }, { caption: "*_Downloaded!_*", quoted: message.data }, "video");
+  if (vidd || ved) {
+    if (!message.isGroup) {
+      if (vidd) {
+        await message.reply({ url: vidd.url }, { caption: "*_Downloaded_*", quoted: message.data }, "video");
+      } else {
+        return message.reply("*Video not available*");
+      }
+    } else {
+      await message.send("Choose quality", { values: [{ displayText: "HD", id: `sendurl ${vidd?.url}` }, { displayText: "SD", id: `sendurl ${ved?.url}` }].filter(Boolean), onlyOnce: 1, withPrefix: true, participates: [message.sender] }, "poll");
+    }
   } else if (pic.length > 0) {
     for (var photo of pic) {
       await message.reply({ url: photo.url }, { caption: "*_Downloaded!_*", quoted: message.data }, "image");
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
   } else {
-    return message.reply("*Couldn't find valid media to download*");
+    return message.reply("*Couldn't find media*");
   }
 });
 
@@ -259,32 +262,19 @@ System({
   desc: 'Downloads song from Spotify'
 }, async (message, match, m) => {
   const link = (await extractUrlsFromText(match || message.reply_message.text))[0];
-  if (!link) return await message.reply("_Give a spotify *Url*_");
-  if (!link.includes('https://open.spotify.com')) return await message.reply("_Need a Spotify URL_");
-    const data = await getJson(IronMan(`ironman/dl/spotify?link=${link}`));
-    const lnk = data.download;
-    const cover = data.cover_url;
-    const artist = data.artist;
-    const title = data.title;
-    const q = await message.send(`_*Downloading ${title}...*_`);
-    const img = await getBuffer(cover);
-    const aud = await getBuffer(lnk);
-    const audio = await toAudio(aud);
-    await message.reply(audio, {
+  if (!link || !link.includes('spotify')) return await message.reply("_Give a valid Spotify *Url*_");
+  const { download: lnk, cover_url: cover, artist, title } = await getJson(IronMan(`ironman/dl/spotify?link=${link}`));
+  await message.send(`_*Downloading ${title}...*_`);
+  const [img, aud] = await Promise.all([getBuffer(cover), getBuffer(lnk)]);
+  await message.reply(await toAudio(aud), {
       mimetype: 'audio/mpeg',
-      contextInfo: {
-        externalAdReply: {
-          title: title,
-          body: artist,
-          thumbnail: img,
-          mediaType: 1,
-          mediaUrl: '',
-          sourceUrl: 'https://github.com/Loki-Xer/Jarvis',
-          showAdAttribution: true,
-          renderLargerThumbnail: true
-        }
+      linkPreview: {
+            title, body: artist, 
+	    thumbnail: img,
+            mediaType: 1, sourceUrl: 'https://github.com/Loki-Xer/Jarvis',
+            showAdAttribution: true, renderLargerThumbnail: true
       }
-    }, "audio");
+  }, "audio");
 });
 
 System({
@@ -295,8 +285,9 @@ System({
 }, async (message, text) => {
     let match = await extractUrlsFromText(text);
     if (!match) return await message.reply("*need a url*");
+    let data = { key: { fromMe: false, participant: "0@s.whatsapp.net", remoteJid: "status@broadcast", id: message.client.generateMessageId() }, message: { extendedTextMessage: { "text": "\n*Made With Love 🤍*" }}};
     for (const imageUrl of match) {
-        if (imageUrl) await message.sendFromUrl(imageUrl, { caption: "*Done ✨*", quoted: message.data });
+        if (imageUrl) await message.sendFromUrl(imageUrl, { caption: "*Done ✨*", quoted: data });
     }
 });
 

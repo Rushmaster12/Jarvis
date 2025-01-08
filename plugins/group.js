@@ -11,6 +11,7 @@ Jarvis - Loki-Xer
 
 
 const {
+    bot,
     Vote,
     isUrl,
     sleep,
@@ -79,7 +80,7 @@ System({
     desc: "Kicks a person from the group"
 }, async (message, match) => {
     match = message.mention?.jid?.[0] || message.reply_message?.sender || match;
-    if (!match) return await message.reply("_Reply to someone/mention_\n*Example:* .kick @user");    
+    if (!match) return await message.reply("_Reply to someone/mention_\n*Example:* .kick @user or kick all");    
     if (!await isAdmin(message, message.user.jid)) return await message.send("_I'm not an admin_");
     if (match === "all") {
         let { participants } = await message.client.groupMetadata(message.jid);
@@ -198,25 +199,20 @@ System({
             msg += `${i + 1}. @${participants[i].id.split('@')[0]}\n`;
         }
         await message.send(msg, { mentions: participants.map(a => a.id) });
-    } 
-    else if (match === "admin" || match === "admins") {
+    } else if (match === "admin" || match === "admins") {
         for (let i = 0; i < admins.length; i++) {
             msg += `${i + 1}. @${admins[i].split('@')[0]}\n`;
         }
-        return await message.send(msg, { mentions: participants.map(a => a.id) });
-    } 
-    else if (match === "me" || match === "mee") {
+        return await message.send(msg, { mentions: admins });
+    } else if (match === "me" || match === "mee") {
         await message.send(`@${message.sender.split("@")[0]}`, { mentions: [message.sender] });
-    } 
-    else if (match || message.reply_message.text) {
+    } else if (match || message.reply_message.text) {
         match = match || message.reply_message.text;
         if (!match) return await message.reply('*Example :* \n_*tag all*_\n_*tag admin*_\n_*tag text*_\n_*Reply to a message*_');
         await message.send(match, { mentions: participants.map(a => a.id) });
-    } 
-    else if (message.reply_message.i) {
+    } else if (message.quoted) {
         return await message.client.forwardMessage(message.jid, message.reply_message.message, { contextInfo: { mentionedJid: participants.map(a => a.id) } });
-    } 
-    else {
+    } else {
         return await message.reply("*Example :* \n_*tag all*_\n_*tag admin*_\n_*tag me*_\n_*tag text*_\n_*Reply to a message to tag that message*_");
     }
 });
@@ -324,17 +320,17 @@ System({
 	onlyGroup: true,
 	adminAccess: true,
 	desc: "To change the group's subject",
-}, async (message, match, m, client) => {
+}, async (message, match) => {
 	match = match || message.reply_message.text
 	if (!match) return await message.reply('*Need Subject!*\n*Example: gname New Subject!*.')
 	const meta = await message.client.groupMetadata(message.chat);
 	if (!meta.restrict) {
-		await client.groupUpdateSubject(message.chat, match)
+		await message.client.groupUpdateSubject(message.chat, match)
 		return await message.send("*Subject updated*")
 	}
 	const isbotAdmin = await isBotAdmins(message);
 	if (!isbotAdmin) return await message.reply("I'm not an admin")
-	await client.groupUpdateSubject(message.chat, match)
+	await message.client.groupUpdateSubject(message.chat, match)
 	return await message.send("*Subject updated*")
 });
 
@@ -345,7 +341,7 @@ System({
     onlyGroup: true,
     adminAccess: true,
     desc: "To change the group's description",
-}, async (message, match, client) => {
+}, async (message, match) => {
     match = match || message.reply_message.text
     if (!match) return await message.reply('*Need Description!*\n*Example: gdesc New Description!*.')
     const meta = await message.client.groupMetadata(message.jid);
@@ -371,8 +367,8 @@ System({
         const { participants, subject } = await message.client.groupMetadata(message.jid);
         const participantJids = participants.map(u => u.id).join("\n\n")
         return message.reply(`*Group Participants Jid*\n\n*Group Name:* ${subject}\n*All Participants Jid*\n\n${participantJids}`);
-    }
-    await message.client.sendButton(message.jid, { buttons: [{ name: "quick_reply", display_text: "All Group Info", id: "gjid info" }, { name: "quick_reply", display_text: "Group Participants Jid", id: "gjid participants jid" }], body: "", footer: "*JARVIS-MD*", title: "*Group Jid Info 🎏*\n" });
+    };
+    await message.send("\n*Group Jid Info 🎏*\n", { values: [ { displayText: "*All Group Info*", id: "gjid info" }, { displayText: "*Group Participants Jid*", id: "gjid participants jid" } ], withPrefix: true, participates: [message.sender] }, "poll");
 });
 
 
@@ -386,11 +382,11 @@ System({
     if(!match && message.isGroup) match = `https://chat.whatsapp.com/${await message.client.groupInviteCode(message.jid)}`;
     if (!match) return await message.reply('*Need Group Link*\n_Example : ginfo group link_')
     const [link, invite] = match.match(/chat.whatsapp.com\/([0-9A-Za-z]{20,24})/i) || []
-    if (!invite) return await message.reply('*Invalid invite link*')
-    try { const response = await message.client.groupGetInviteInfo(invite)
-    await message.send("id: " + response.id + "\nsubject: " + response.subject + "\nowner: " + `${response.owner ? response.owner.split('@')[0] : 'unknown'}` + "\nsize: " + response.size + "\nrestrict: " + response.restrict + "\nannounce: " + response.announce + "\ncreation: " + require('moment-timezone')(response.creation * 1000).tz('Asia/Kolkata').format('DD/MM/YYYY HH:mm:ss') + "\ndesc" + response.desc)
-    } catch (error) {
-    await message.reply('*Invalid invite link*') }
+    if (!invite) return await message.reply('*Invalid invite link*');
+    const response = await message.groupInviteInfo(invite);
+    if(!response) return await message.reply('*Invalid invite link*');
+    const profile = await message.getPP(response.id);
+    await message.send(profile, { caption: "id: " + response.id + "\nsubject: " + response.subject + "\nowner: " + `${response.owner ? response.owner.split('@')[0] : 'unknown'}` + "\nsize: " + response.size + "\nrestrict: " + response.restrict + "\nannounce: " + response.announce + "\ncreation: " + require('moment-timezone')(response.creation * 1000).tz('Asia/Kolkata').format('DD/MM/YYYY HH:mm:ss') + "\ndesc: " + response.desc }, "image");
 })
 
 System({
@@ -448,7 +444,7 @@ System({
 }, async (message, match) => {
     const data = await message.store.groupStatus(message.jid, "active");
     let activeUsers = Array.isArray(data) ? `*Total Active Users ${data.length}*\n\n` + data.map(item => `*Name: ${item.pushName}*\n*Number: ${item.jid.split("@")[0]}*\n*Total Messages: ${item.messageCount}*\n\n`).join("") : "_*No active users found.*_";
-    return await message.client.sendMessage(message.jid, { text: activeUsers.trim() });
+    return await message.send(activeUsers.trim());
 });
 
 System({
@@ -509,8 +505,8 @@ System({
    var admin = await isAdmin(message, message.user.jid);
    if (!admin) return await message.send("_I'm not an admin_");
    await setData(message.jid, match, "true", "autoMute");
-   await message.send(`*_Group will auto mute at ${match}, rebooting.._*`)
-   require('pm2').restart('index.js');
+   await message.send(`*_Group will auto mute at ${match}, rebooting.._*`);
+   bot.restart();
 });
 
 System({
@@ -536,7 +532,7 @@ System({
    if (!admin) return await message.send("_I'm not an admin_");
    await setData(message.jid, match, "true", "autoUnmute");
    await message.send(`*_Group will auto unmute at ${match}, rebooting.._*`)
-   require('pm2').restart('index.js');
+   bot.restart();
 });
 
 System({
@@ -551,20 +547,4 @@ System({
    if ((!autoMute || autoMute.status === "false") && (!autoUnmute || autoUnmute.status === "false")) return message.reply("*Auto mute and Auto unmute not set yet*");
    let msg = [autoMute?.status === "true" ? `*⬦ Auto Mute Set As:* ${autoMute.message}` : "", autoUnmute?.status === "true" ? `*⬦ Auto Unmute Set As:* ${autoUnmute.message}` : ""].filter(Boolean).join("\n");
    return message.reply("*Scheduled Mutes/Unmutes*\n\n" + msg);
-});
-
-System({
-  pattern: 'getinfo',
-  fromMe: isPrivate,
-  type: 'group',
-  onlyGroup: true,
-  adminAccess: true,
-  desc: 'Get group info'
-}, async (message, match, m) => {
-  const ppUrl = await message.getPP(message.chat);
-  const metadata = await message.client.groupMetadata(message.chat);
-  const admins = metadata.participants.filter(p => p.admin === 'admin').map(a => a.id.split('@')[0]);
-  const { subject, subjectOwner, creation, size, owner, desc, announce, joinApprovalMode } = metadata;
-  const caption = `━━━───𝗚𝗥𝗢𝗨𝗣 𝗜𝗡𝗙𝗢───━━━\n𝗡𝗔𝗠𝗘: ${subject}\n𝗖𝗥𝗘𝗔𝗧𝗘𝗗 𝗢𝗡: ${new Date(creation * 1000).toLocaleString()}\n𝗦𝗜𝗭𝗘: ${size} MEMBERS\n𝗦𝗨𝗕𝗝𝗘𝗖𝗧 𝗢𝗪𝗡𝗘𝗥: ${subjectOwner ? subjectOwner.split('@')[0] : 'Not defined'}\n𝗢𝗪𝗡𝗘𝗥: ${owner || 'Not defined'}\n𝗗𝗘𝗦𝗖𝗥𝗜𝗣𝗧𝗜𝗢𝗡: ${desc || 'No description'}\n𝗝𝗢𝗜𝗡 𝗔𝗣𝗣𝗥𝗢𝗩𝗔𝗟: ${joinApprovalMode ? 'ENABLED' : 'DISABLED'}\n𝗔𝗡𝗡𝗢𝗨𝗡𝗖𝗘𝗠𝗘𝗡𝗧: ${announce ? 'YES' : 'NO'}\n𝗔𝗗𝗠𝗜𝗡𝗦: ${admins.join(', ')}`;
-  await message.reply({ url: ppUrl }, { caption }, 'image');
 });

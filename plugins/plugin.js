@@ -10,7 +10,7 @@ Jarvis - Loki-Xer
 ------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
-const { System, setData, pluginList, removeData, isUrl, extractUrlsFromText, getData, sleep } = require("../lib/");
+const { System, setData, pluginList, removeData, isUrl, extractUrlsFromText, getData, sleep, bot } = require("../lib/");
 const axios = require("axios");
 const util = require("util");
 const fs = require("fs");
@@ -91,6 +91,6 @@ System({
        delete require.cache[require.resolve(pluginPath)];
        fs.unlinkSync(pluginPath);
        await message.send(`_*Plugin ${match} deleted successfully bot is restarting*_`);
-       await require('pm2').restart('index.js');
+       await bot.restart();
     }
 });

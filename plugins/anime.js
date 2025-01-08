@@ -35,40 +35,24 @@ System({
 });
 
 System({
-    pattern: 'sanime (.*)',
+    pattern: 'fanime (.*)',
     fromMe: isPrivate,
-    desc: 'Get details of an anime',
+    desc: 'find anime details',
     type: 'anime',
-}, async (message, match, m) => {
-    if (!match) return await message.send("*Need an anime name*\n_Example: .anime Future Diary_");
-    var anime = encodeURI(match);
-    var res = await fetch(IronMan(`ironman/s/anime?anime=${anime}`));
+}, async (message, match) => {
+    if (!match) return await message.send("*Need an anime name*\n_Example: .anime Future Diary_");    
+    const res = await fetch(IronMan(`ironman/s/anime?anime=${encodeURI(match)}`));
     if (!res.ok) return await message.send("*Not Found*\nCheck if the anime name is correct");
-    var data = await res.json();
-    var Etitle = data['English Title'];
-    var Romaji = data.Romaji;
-    var Japanese = data.Japanese;
-    var Summary = data.Summary;
-    var Released = data.Released;
-    var Ended = data.Ended;
-    var Popularity = data.Popularity;
-    var Rating = data.Rating;
-    var AgeRating = data['Age Rating'];
-    var Subtype = data.Subtype;
-    var Status = data.Status;
-    var Poster = data.Poster;
-    var Episodes = data.Episodes;
-    var EpisodeLength = data['Episode Length'];
-    var TotalLength = data['Total Length'];
-    var ShowType = data['Show Type'];
-    var NSFW = data.NSFW;
-    var Cover = data.Low_Cover;
-    var pimage = await getBuffer(Cover);
-    var YouTube = data.YouTube;
-    var link = "https://github.com/Loki-Xer/Jarvis-md";
-    var caption = `➥ *ɴᴀᴍᴇ:* ${Romaji}\n✰ *ᴛʏᴘᴇ:* ${ShowType}\n✰ *ꜱᴜʙᴛʏᴘᴇ:* ${Subtype}\n✰ *ꜱᴛᴀᴛᴜꜱ:* ${Status}\n✰ *ʀᴇʟᴇᴀꜱᴇᴅ:* ${Released}\n✰ *ᴇɴᴅᴇᴅ:* ${Ended}\n✰ *ᴇᴘɪꜱᴏᴅᴇꜱ:* ${Episodes}\n✰ *ᴛᴏᴛᴀʟ ʟᴇɴɢᴛʜ:* ${TotalLength}\n✰ *ᴇᴘɪꜱᴏᴅᴇ ʟᴇɴɢᴛʜ:* ${EpisodeLength}\n✰ *ᴀɢᴇ ʀᴀᴛɪɴɢ:* ${AgeRating}\n✰ *ᴘᴏᴘᴜʟᴀʀɪᴛʏ:* ${Popularity}\n✰ *ʀᴀᴛɪɴɢ:* ${Rating}\n✰ *ɴꜱꜰᴡ:* ${NSFW}\n✰ *ꜱᴜᴍᴍᴀʀʏ:* ${Summary}\n➥ *ᴛʀᴀɪʟᴇʀ:* https://youtube.com/watch?v=${YouTube}\n`;
-    var linkPrev = { title: Etitle, body: Japanese, thumbnail: pimage, mediaType: 1, mediaUrl: link, sourceUrl: link, showAdAttribution: false, renderLargerThumbnail: true };
-    await message.client.sendMessage(message.chat, { image: { url: Poster }, caption, contextInfo: { externalAdReply: linkPrev } }, { quoted: message });
+    const data = await res.json();
+    const { 
+        Romaji, Japanese, Summary, Released, Ended, Popularity, 
+        Rating, 'Age Rating': AgeRating, Subtype, Status, 
+        Poster, Episodes, 'Episode Length': EpisodeLength, 
+        'Total Length': TotalLength, 'Show Type': ShowType, 
+        NSFW, Low_Cover: Cover, YouTube 
+    } = data;
+    const caption = `➥ *ɴᴀᴍᴇ:* ${Romaji}\n✰ *ᴛʏᴘᴇ:* ${ShowType}\n✰ *ꜱᴜʙᴛʏᴘᴇ:* ${Subtype}\n✰ *ꜱᴛᴀᴛᴜꜱ:* ${Status}\n✰ *ʀᴇʟᴇᴀꜱᴇᴅ:* ${Released}\n✰ *ᴇɴᴅᴇᴅ:* ${Ended}\n✰ *ᴇᴘɪꜱᴏᴅᴇꜱ:* ${Episodes}\n✰ *ᴛᴏᴛᴀʟ ʟᴇɴɢᴛʜ:* ${TotalLength}\n✰ *ᴇᴘɪꜱᴏᴅᴇ ʟᴇɴɢᴛʜ:* ${EpisodeLength}\n✰ *ᴀɢᴇ ʀᴀᴛɪɴɢ:* ${AgeRating}\n✰ *ᴘᴏᴘᴜʟᴀʀɪᴛʏ:* ${Popularity}\n✰ *ʀᴀᴛɪɴɢ:* ${Rating}\n✰ *ɴꜱꜰᴡ:* ${NSFW}\n✰ *ꜱᴜᴍᴍᴀʀʏ:* ${Summary}\n➥ *ᴛʀᴀɪʟᴇʀ:* https://youtube.com/watch?v=${YouTube}\n`;    
+    await message.send({ url: Poster }, { caption, linkPreview: { title: data['English Title'], body: Japanese, thumbnail: await getBuffer(Cover), mediaType: 1, mediaUrl: "https://github.com/Loki-Xer/Jarvis-md", sourceUrl: "https://github.com/Loki-Xer/Jarvis-md", showAdAttribution: false, renderLargerThumbnail: true }, quoted: message }, 'image');
 });
 
 System({
@@ -76,7 +60,7 @@ System({
     fromMe: isPrivate,
     desc: 'Get a random anime quote',
     type: 'anime',
-}, async (message, match, m) => {
+}, async (message, match) => {
     const data = await getJson(IronMan('api/aquote'));
     if (!data && !data.result && !data.result.length > 0) return await message.reply('_*No quotes found.*_');
     const randomIndex = Math.floor(Math.random() * data.result.length);
